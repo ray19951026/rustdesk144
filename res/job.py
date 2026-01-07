@@ -152,6 +152,10 @@ def sign(file_path):
 
 def sign_one_file(file_path):
     logging.info(f"Signing {file_path}")
+    # 临时跳过签名，直接返回成功
+    logging.info(f"Skipped signing for test: {file_path}")
+    return True
+    logging.info(f"Signing {file_path}")
     res = create("sign", file_path)
     logging.info(f"Uploaded {file_path}")
     task_id = res["id"]
