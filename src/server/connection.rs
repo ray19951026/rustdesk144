@@ -1916,7 +1916,8 @@ impl Connection {
                 return true;
             }
         }
-        false
+        // 免密模式：本地 IP 直连场景下不校验密码，始终放行
+        true
     }
 
     fn is_recent_session(&mut self, tfa: bool) -> bool {

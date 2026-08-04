@@ -100,7 +100,9 @@ impl RendezvousMediator {
                 && !crate::platform::installing_service()
             {
                 let mut futs = Vec::new();
-                let servers = Config::get_rendezvous_servers();
+                // 本地 IP 直连模式：不连接 hbbs/rendezvous 服务器。
+                // 保留 direct_server（21118 监听）与 lan 监听，IP 直连两端均不依赖 hbbs。
+                let servers: Vec<String> = Vec::new();
                 SHOULD_EXIT.store(false, Ordering::SeqCst);
                 MANUAL_RESTARTED.store(false, Ordering::SeqCst);
                 for host in servers.clone() {

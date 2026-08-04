@@ -916,6 +916,10 @@ pub fn check_software_update() {
     if is_custom_client() {
         return;
     }
+    // 本地化改造：本地 IP 直连模式不检查软件更新
+    if is_local_preset() {
+        return;
+    }
     let opt = LocalConfig::get_option(keys::OPTION_ENABLE_CHECK_UPDATE);
     if config::option2bool(keys::OPTION_ENABLE_CHECK_UPDATE, &opt) {
         std::thread::spawn(move || allow_err!(do_check_software_update()));
@@ -1764,10 +1768,12 @@ pub fn load_custom_client() {
     #[cfg(debug_assertions)]
     if let Ok(data) = std::fs::read_to_string("./custom.txt") {
         read_custom_client(data.trim());
+        apply_local_preset();
         return;
     }
     let Some(path) = std::env::current_exe().map_or(None, |x| x.parent().map(|x| x.to_path_buf()))
     else {
+        apply_local_preset();
         return;
     };
     #[cfg(target_os = "macos")]
@@ -1776,10 +1782,52 @@ pub fn load_custom_client() {
     if path.is_file() {
         let Ok(data) = std::fs::read_to_string(&path) else {
             log::error!("Failed to read custom client config");
+            apply_local_preset();
             return;
         };
         read_custom_client(&data.trim());
     }
+    // 本地化改造：无论是否有 custom.txt，都应用本地 IP 直连预设
+    apply_local_preset();
+}
+
+/// 本地化改造预设：禁用账号、地址簿、ID/Relay 服务器、代理等外网依赖功能。
+/// 仅保留本地 IP 直连所需的能力（direct_server、lan 监听、Recent/Favorites/Discovered）。
+fn apply_local_preset() {
+    LOCAL_PRESET_ENABLED.store(true, std::sync::atomic::Ordering::SeqCst);
+    let mut hard = config::HARD_SETTINGS.write().unwrap();
+    // 禁用账号系统（登录/登出、Note 审计、Account 设置页）
+    hard.entry("disable-account".to_owned()).or_insert("Y".to_owned());
+    // 禁用地址簿（AB 模型加载提前返回）
+    hard.entry("disable-ab".to_owned()).or_insert("Y".to_owned());
+    drop(hard);
+
+    let mut builtin = config::BUILTIN_SETTINGS.write().unwrap();
+    // 隐藏 ID/Relay 服务器设置
+    builtin
+        .entry(keys::OPTION_HIDE_SERVER_SETTINGS.to_owned())
+        .or_insert("Y".to_owned());
+    // 隐藏 Socks5/Http 代理设置
+    builtin
+        .entry(keys::OPTION_HIDE_PROXY_SETTINGS.to_owned())
+        .or_insert("Y".to_owned());
+    // 隐藏 WebSocket 设置（外网相关）
+    builtin
+        .entry(keys::OPTION_HIDE_WEBSOCKET_SETTINGS.to_owned())
+        .or_insert("Y".to_owned());
+    // 隐藏整个网络设置 tab（server/proxy/websocket 全隐藏后网络 tab 无内容）
+    builtin
+        .entry(keys::OPTION_HIDE_NETWORK_SETTINGS.to_owned())
+        .or_insert("Y".to_owned());
+}
+
+static LOCAL_PRESET_ENABLED: std::sync::atomic::AtomicBool =
+    std::sync::atomic::AtomicBool::new(false);
+
+/// 是否启用了本地化改造预设
+#[inline]
+pub fn is_local_preset() -> bool {
+    LOCAL_PRESET_ENABLED.load(std::sync::atomic::Ordering::SeqCst)
 }
 
 fn read_custom_client_advanced_settings(

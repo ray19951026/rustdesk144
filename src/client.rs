@@ -3449,8 +3449,7 @@ pub async fn handle_hash(
     }
 
     let password = if password.is_empty() {
-        // login without password, the remote side can click accept
-        interface.msgbox("input-password", "Password Required", "", "");
+        // 免密模式：本地 IP 直连场景下不弹密码框，直接发送空密码登录
         Vec::new()
     } else {
         let mut hasher = Sha256::new();

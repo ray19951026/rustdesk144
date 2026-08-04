@@ -132,10 +132,11 @@ Future<void> initEnv(String appType) async {
   updateSystemWindowTheme();
 }
 
-void runMainApp(bool startService) async {
+Future<void> runMainApp(bool startService) async {
   // register uni links
   await initEnv(kAppTypeMain);
-  checkUpdate();
+  // 本地化改造：不检查软件更新
+  // checkUpdate();
   // trigger connection status updater
   await bind.mainCheckConnectStatus();
   if (startService) {
@@ -179,7 +180,8 @@ void runMainApp(bool startService) async {
 
 void runMobileApp() async {
   await initEnv(kAppTypeMain);
-  checkUpdate();
+  // 本地化改造：不检查软件更新
+  // checkUpdate();
   if (isAndroid) androidChannelInit();
   if (isAndroid) platformFFI.syncAndroidServiceAppDirConfigPath();
   draggablePositions.load();

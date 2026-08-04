@@ -2245,6 +2245,10 @@ pub fn is_custom_client() -> SyncReturn<bool> {
     SyncReturn(crate::common::is_custom_client())
 }
 
+pub fn is_local_preset() -> SyncReturn<bool> {
+    SyncReturn(crate::common::is_local_preset())
+}
+
 pub fn is_disable_settings() -> SyncReturn<bool> {
     SyncReturn(config::is_disable_settings())
 }

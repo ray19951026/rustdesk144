@@ -519,14 +519,15 @@ class _GeneralState extends State<_General> {
               isServer: false,
             ),
           ),
-        if (!isWeb && !bind.isCustomClient())
+        // 本地化改造：禁用账号时不显示更新检查选项（本地 IP 直连模式不检查更新）
+        if (!isWeb && !bind.isCustomClient() && !bind.isDisableAccount())
           _OptionCheckBox(
             context,
             'Check for software update on startup',
             kOptionEnableCheckUpdate,
             isServer: false,
           ),
-        if (showAutoUpdate)
+        if (showAutoUpdate && !bind.isDisableAccount())
           _OptionCheckBox(
             context,
             'Auto update',
