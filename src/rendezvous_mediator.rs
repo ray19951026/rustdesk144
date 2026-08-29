@@ -768,6 +768,15 @@ async fn direct_server(server: ServerPtr) {
             }
             if let Ok(Ok((stream, addr))) = hbb_common::timeout(1000, l.accept()).await {
                 stream.set_nodelay(true).ok();
+                let lan_only = option2bool(
+                    OPTION_LAN_ONLY,
+                    &Config::get_option(OPTION_LAN_ONLY),
+                );
+                if lan_only && !hbb_common::is_lan_ip(addr.ip()) {
+                    log::info!("Reject non-LAN direct access from {}", addr);
+                    drop(stream);
+                    continue;
+                }
                 log::info!("direct access from {}", addr);
                 let local_addr = stream
                     .local_addr()

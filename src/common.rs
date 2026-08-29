@@ -1795,6 +1795,18 @@ pub fn load_custom_client() {
 /// 仅保留本地 IP 直连所需的能力（direct_server、lan 监听、Recent/Favorites/Discovered）。
 fn apply_local_preset() {
     LOCAL_PRESET_ENABLED.store(true, std::sync::atomic::Ordering::SeqCst);
+    config::set_local_direct_mode(true);
+    let mut defaults = config::DEFAULT_SETTINGS.write().unwrap();
+    // 启用本地 IP 直连监听（direct_server 在 21118 端口监听，否则 IP 直连无法建立）。
+    // 必须写入 DEFAULT_SETTINGS，因为 Config::get_option() 走 OVERWRITE→options→DEFAULT，不含 BUILTIN。
+    defaults
+        .entry(keys::OPTION_DIRECT_SERVER.to_owned())
+        .or_insert("Y".to_owned());
+    // 仅接受局域网(内网)连接：内网直连场景下默认开启，阻止外网 IP 建立连接。
+    defaults
+        .entry(keys::OPTION_LAN_ONLY.to_owned())
+        .or_insert("Y".to_owned());
+    drop(defaults);
     let mut hard = config::HARD_SETTINGS.write().unwrap();
     // 禁用账号系统（登录/登出、Note 审计、Account 设置页）
     hard.entry("disable-account".to_owned()).or_insert("Y".to_owned());
