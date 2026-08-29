@@ -284,6 +284,10 @@ impl UI {
         crate::using_public_server()
     }
 
+    fn get_local_ip(&self) -> String {
+        crate::flutter_ffi::main_get_local_ip()
+    }
+
     fn is_incoming_only(&self) -> bool {
         hbb_common::config::is_incoming_only()
     }
@@ -707,6 +711,7 @@ impl sciter::EventHandler for UI {
         fn get_api_server();
         fn is_xfce();
         fn using_public_server();
+        fn get_local_ip();
         fn is_custom_client();
         fn is_outgoing_only();
         fn is_incoming_only();

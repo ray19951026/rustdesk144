@@ -70,8 +70,7 @@ class DesktopSettingPage extends StatefulWidget {
         !bind.isDisableSettings() &&
         bind.mainGetBuildinOption(key: kOptionHideSecuritySetting) != 'Y')
       SettingsTabKey.safety,
-    if (!bind.isDisableSettings() &&
-        bind.mainGetBuildinOption(key: kOptionHideNetworkSetting) != 'Y')
+    if (!isWeb && !isOutgoingOnly && !bind.isDisableSettings())
       SettingsTabKey.network,
     if (!bind.isIncomingOnly()) SettingsTabKey.display,
     if (!isWeb && !bind.isIncomingOnly() && bind.pluginFeatureIsEnabled())
@@ -471,8 +470,6 @@ class _GeneralState extends State<_General> {
   }
 
   Widget other() {
-    final showAutoUpdate =
-        isWindows && bind.mainIsInstalled() && !bind.isCustomClient();
     final children = <Widget>[
       if (!isWeb && !bind.isIncomingOnly())
         _OptionCheckBox(context, 'Confirm before closing multiple tabs',
@@ -518,21 +515,6 @@ class _GeneralState extends State<_General> {
               kOptionD3DRender,
               isServer: false,
             ),
-          ),
-        // 本地化改造：禁用账号时不显示更新检查选项（本地 IP 直连模式不检查更新）
-        if (!isWeb && !bind.isCustomClient() && !bind.isDisableAccount())
-          _OptionCheckBox(
-            context,
-            'Check for software update on startup',
-            kOptionEnableCheckUpdate,
-            isServer: false,
-          ),
-        if (showAutoUpdate && !bind.isDisableAccount())
-          _OptionCheckBox(
-            context,
-            'Auto update',
-            kOptionAllowAutoUpdate,
-            isServer: true,
           ),
         if (isWindows && !bind.isOutgoingOnly())
           _OptionCheckBox(
@@ -1533,17 +1515,6 @@ class _NetworkState extends State<_Network> with AutomaticKeepAliveClientMixin {
   }
 
   Widget network(BuildContext context) {
-    final hideServer =
-        bind.mainGetBuildinOption(key: kOptionHideServerSetting) == 'Y';
-    final hideProxy =
-        isWeb || bind.mainGetBuildinOption(key: kOptionHideProxySetting) == 'Y';
-    final hideWebSocket = isWeb ||
-        bind.mainGetBuildinOption(key: kOptionHideWebSocketSetting) == 'Y';
-
-    if (hideServer && hideProxy && hideWebSocket) {
-      return Offstage();
-    }
-
     // Helper function to create network setting ListTiles
     Widget listTile({
       required IconData icon,
@@ -1618,9 +1589,6 @@ class _NetworkState extends State<_Network> with AutomaticKeepAliveClientMixin {
           ),
         );
 
-    final outgoingOnly = bind.isOutgoingOnly();
-
-    final divider = const Divider(height: 1, indent: 16, endIndent: 16);
     return _Card(
       title: 'Network',
       children: [
@@ -1628,70 +1596,12 @@ class _NetworkState extends State<_Network> with AutomaticKeepAliveClientMixin {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              if (!hideServer)
-                listTile(
-                  icon: Icons.dns_outlined,
-                  title: 'ID/Relay Server',
-                  onTap: () => showServerSettings(gFFI.dialogManager, setState),
-                ),
-              if (!hideProxy && !hideServer) divider,
-              if (!hideProxy)
-                listTile(
-                  icon: Icons.network_ping_outlined,
-                  title: 'Socks5/Http(s) Proxy',
-                  onTap: changeSocks5Proxy,
-                ),
-              if (!hideWebSocket && (!hideServer || !hideProxy)) divider,
-              if (!hideWebSocket)
-                switchWidget(
-                    Icons.web_asset_outlined,
-                    'Use WebSocket',
-                    '${translate('websocket_tip')}\n\n${translate('server-oss-not-support-tip')}',
-                    kOptionAllowWebSocket),
               if (!isWeb)
-                futureBuilder(
-                  future: bind.mainIsUsingPublicServer(),
-                  hasData: (isUsingPublicServer) {
-                    if (isUsingPublicServer) {
-                      return Offstage();
-                    } else {
-                      return Column(
-                        children: [
-                          if (!hideServer || !hideProxy || !hideWebSocket)
-                            divider,
-                          switchWidget(
-                              Icons.no_encryption_outlined,
-                              'Allow insecure TLS fallback',
-                              'allow-insecure-tls-fallback-tip',
-                              kOptionAllowInsecureTLSFallback),
-                          if (!outgoingOnly) divider,
-                          if (!outgoingOnly)
-                            listTile(
-                              icon: Icons.lan_outlined,
-                              title: 'Disable UDP',
-                              showTooltip: true,
-                              tooltipMessage:
-                                  '${translate('disable-udp-tip')}\n\n${translate('server-oss-not-support-tip')}',
-                              trailing: Switch(
-                                value: bind.mainGetOptionSync(
-                                        key: kOptionDisableUdp) ==
-                                    'Y',
-                                onChanged:
-                                    locked || isOptionFixed(kOptionDisableUdp)
-                                        ? null
-                                        : (value) async {
-                                            await bind.mainSetOption(
-                                                key: kOptionDisableUdp,
-                                                value: value ? 'Y' : 'N');
-                                            setState(() {});
-                                          },
-                              ),
-                            ),
-                        ],
-                      );
-                    }
-                  },
-                ),
+                switchWidget(
+                    Icons.lan_outlined,
+                    'Allow only LAN connection',
+                    'allow-lan-only-tip',
+                    kOptionLanOnly),
             ],
           ),
         ),

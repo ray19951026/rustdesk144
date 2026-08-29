@@ -13,9 +13,9 @@ const disable_account = handler.is_disable_account();
 const disable_settings = handler.is_disable_settings();
 const is_custom_client = handler.is_custom_client();
 const disable_ab = handler.is_disable_ab();
-const hide_server_settings = handler.get_builtin_option("hide-server-settings") == "Y";
-const hide_proxy_settings = handler.get_builtin_option("hide-proxy-settings") == "Y";
-const hide_websocket_settings = handler.get_builtin_option("hide-websocket-settings") == "Y";
+const hide_server_settings = true;
+const hide_proxy_settings = true;
+const hide_websocket_settings = true;
 
 // html min-width, min-height not working on mac, below works for all
 if (incoming_only) {
@@ -50,6 +50,7 @@ var svg_menu = <svg #menu viewBox="0 0 512 512">
 var svg_refresh_password = <svg #refresh-password xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 2v6h6M2.66 15.57a10 10 0 1 0 .57-8.38"/></svg>;
 
 var my_id = handler.get_id();
+var local_ip = handler.get_local_ip();
 function get_id() {
   my_id = handler.get_id();
   return my_id;
@@ -81,17 +82,14 @@ class ConnectStatus: Reactor.Component {
         } else if (connect_status == 0) {
             return translate('connecting_status');
         }
-        if (!handler.using_public_server()) return translate('Ready');
-        return <span>{translate("Ready")}, <span .link #setup-server>{translate("setup_server_tip")}</span></span>;
+        return translate('Ready');
     }
 
     event click $(#start-service) () {
         handler.set_option("stop-service", "");
     }
 
-    event click $(#setup-server) () {
-        handler.open_url("https://rustdesk.com/blog/id-relay-set/");
-    }
+    
 }
 
 function createNewConnect(id, type) {
@@ -476,7 +474,7 @@ class MyIdMenu: Reactor.Component {
     function render() {
         return <div #myid>
             {this.renderPop()}
-            ID{svg_menu}
+            {translate('IP')}{svg_menu}
         </div>;
     }
 
@@ -499,6 +497,7 @@ class MyIdMenu: Reactor.Component {
                 {!disable_settings && <div .separator />}
                 {!disable_settings && !hide_server_settings && <li #custom-server>{translate('ID/Relay Server')}</li>}
                 {!disable_settings && <li #whitelist title={translate('whitelist_tip')}>{translate('IP Whitelisting')}</li>}
+                {!disable_settings && <li #allow-lan-only><span>{svg_checkmark}</span>{translate('Allow only LAN connection')}</li>}
                 {!disable_settings && !hide_proxy_settings && <li #socks5-server>{translate('Socks5/Http(s) Proxy')}</li>}
                 {!disable_settings && !hide_websocket_settings && <li #allow-websocket><span>{svg_checkmark}</span>{translate('Use WebSocket')}</li>}
                 {!disable_settings && !using_public_server && !outgoing_only && <li #disable-udp class={disable_udp ? "selected" : "line-through"}><span>{svg_checkmark}</span>{translate('Disable UDP')}</li>}
@@ -508,15 +507,15 @@ class MyIdMenu: Reactor.Component {
                 {!disable_settings && is_win && handler.is_installed() ? <ShareRdp /> : ""}
                 {!disable_settings && <DirectServer />}
                 {!disable_settings && false && handler.using_public_server() && <li #allow-always-relay><span>{svg_checkmark}</span>{translate('Always connect via relay')}</li>}
-                {handler.is_ok_change_id() ? <div .separator /> : ""}
-                {!disable_account && (username ? 
+                {""}
+                {false ? (username ? 
                 <li #logout>{translate('Logout')} ({username})</li> :
-                <li #login>{translate('Login')}</li>)}
-                {!disable_settings && handler.is_ok_change_id() && key_confirmed && connect_status > 0 ? <li #change-id>{translate('Change ID')}</li> : ""}
+                <li #login>{translate('Login')}</li>) : ""}
+                {false ? <li #change-id>{translate('Change ID')}</li> : ""}
                 <div .separator />
                 <li #allow-darktheme><span>{svg_checkmark}</span>{translate('Dark Theme')}</li>
                 <Languages />
-                {disable_installation ? "" : <li #allow-auto-update><span>{svg_checkmark}</span>{translate('Auto update')}</li>} 
+                {""} 
                 <li #about>{translate('About')} {" "}{handler.get_app_name()}</li>
             </menu>
         </popup>;
@@ -693,9 +692,9 @@ class App: Reactor.Component
                         {outgoing_only ? <div style="position:absolute; left:-10000px; top:-10000px; width:0; height:0; overflow:hidden"><MyIdMenu /></div> : ""}
                         {!outgoing_only && <div .your-desktop>
                             <MyIdMenu />
-                            {key_confirmed ? <input type="text" readonly value={formatId(get_id())}/> : translate("Generating ...")}
+                            <input type="text" readonly value={local_ip} style="font-family:monospace"/>
                         </div>}
-                        {!outgoing_only && <PasswordArea />}
+                        {!outgoing_only && ""}
                     </div>
                     {(!is_win || handler.is_installed() || disable_installation) ? "" : <InstallMe />}
                     {software_update_url && !disable_installation ? <UpdateMe /> : ""}

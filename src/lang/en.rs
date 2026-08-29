@@ -1,7 +1,7 @@
 lazy_static::lazy_static! {
 pub static ref T: std::collections::HashMap<&'static str, &'static str> =
     [
-        ("desk_tip", "Your desktop can be accessed with this ID and password."),
+        ("desk_tip", "Your desktop can be accessed in the LAN via the IP below."),
         ("connecting_status", "Connecting to the RustDesk network..."),
         ("not_ready_status", "Not ready. Please check your connection"),
         ("ID/Relay Server", "ID/Relay server"),
@@ -256,6 +256,8 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("download-new-version-failed-tip", "Download failed. You can try again or click the \"Download\" button to download from the release page and upgrade manually."),
         ("update-failed-check-msi-tip", "Installation method check failed. Please click the \"Download\" button to download from the release page and upgrade manually."),
         ("websocket_tip", "When using WebSocket, only relay connections are supported."),
+        ("Allow only LAN connection", "Allow only LAN connection"),
+        ("allow-lan-only-tip", "When enabled, only connections from the local network (e.g. 192.168.x.x) are accepted; external public-IP connections will be rejected."),
         ("terminal-admin-login-tip", "Please input the administrator username and password of the controlled side."),
         ("elevation_username_tip", "Input username or domain\\username"),
         ("allow-insecure-tls-fallback-tip", "By default, RustDesk verifies the server certificate for protocols using TLS.\nWith this option enabled, RustDesk will fall back to skipping the verification step and proceed in case of verification failure."),

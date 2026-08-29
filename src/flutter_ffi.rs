@@ -1219,6 +1219,27 @@ pub fn main_get_my_id() -> String {
     get_id()
 }
 
+pub fn main_get_local_ip() -> String {
+    fn is_private(o: &[u8; 4]) -> bool {
+        o[0] == 10 || (o[0] == 192 && o[1] == 168) || (o[0] == 172 && (16..=31).contains(&o[1]))
+    }
+    let mut fallback = String::new();
+    for iface in default_net::get_interfaces() {
+        if iface.is_up() && !iface.is_loopback() {
+            for ip in iface.ipv4 {
+                let o = ip.addr.octets();
+                if is_private(&o) {
+                    return ip.addr.to_string();
+                }
+                if fallback.is_empty() {
+                    fallback = ip.addr.to_string();
+                }
+            }
+        }
+    }
+    fallback
+}
+
 pub fn main_get_uuid() -> String {
     get_uuid()
 }
